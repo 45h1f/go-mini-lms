@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,6 +21,11 @@ func NewEnrollmentHandler(db *gorm.DB) *EnrollmentHandler {
 }
 
 func (h *EnrollmentHandler) EnrollCourse(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database connection is not available"})
+		return
+	}
+
 	courseIDParam := c.Param("id")
 	courseID, err := strconv.ParseUint(courseIDParam, 10, 32)
 	if err != nil {
@@ -36,6 +42,7 @@ func (h *EnrollmentHandler) EnrollCourse(c *gin.Context) {
 	}
 
 	if err := h.db.Create(&enrollment).Error; err != nil {
+		log.Printf("Enrollment error: %v", err)
 		c.JSON(http.StatusConflict, gin.H{"error": "Already enrolled in this course or invalid course ID"})
 		return
 	}
@@ -47,11 +54,22 @@ func (h *EnrollmentHandler) EnrollCourse(c *gin.Context) {
 }
 
 func (h *EnrollmentHandler) GetMyEnrollments(c *gin.Context) {
+	var enrollments []domain.Enrollment
+
+	if h.db == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"enrollments": []domain.Enrollment{},
+		})
+		return
+	}
+
 	userID := c.MustGet("userID").(uint)
 
-	var enrollments []domain.Enrollment
 	if err := h.db.Preload("Course").Preload("Course.Instructor").Where("user_id = ?", userID).Find(&enrollments).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch enrollments"})
+		log.Printf("Error fetching enrollments: %v", err)
+		c.JSON(http.StatusOK, gin.H{
+			"enrollments": []domain.Enrollment{},
+		})
 		return
 	}
 
