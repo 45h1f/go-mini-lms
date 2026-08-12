@@ -25,7 +25,7 @@ type CreateCourseRequest struct {
 
 func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	if h.db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection is not initialized"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database connection is not initialized"})
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 
 	if err := h.db.Create(&course).Error; err != nil {
 		log.Printf("Error creating course: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create course: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create course: " + err.Error()})
 		return
 	}
 
@@ -56,11 +56,11 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 }
 
 func (h *CourseHandler) ListCourses(c *gin.Context) {
-	var courses []domain.Course
+	courses := make([]domain.Course, 0)
 
 	if h.db == nil {
 		c.JSON(http.StatusOK, gin.H{
-			"courses": []domain.Course{},
+			"courses": courses,
 		})
 		return
 	}
@@ -68,7 +68,7 @@ func (h *CourseHandler) ListCourses(c *gin.Context) {
 	if err := h.db.Preload("Instructor").Preload("Lessons").Find(&courses).Error; err != nil {
 		log.Printf("Error querying courses: %v", err)
 		c.JSON(http.StatusOK, gin.H{
-			"courses": []domain.Course{},
+			"courses": make([]domain.Course, 0),
 		})
 		return
 	}
