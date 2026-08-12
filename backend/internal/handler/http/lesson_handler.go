@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -26,6 +27,11 @@ type CreateLessonRequest struct {
 }
 
 func (h *LessonHandler) CreateLesson(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database connection unavailable"})
+		return
+	}
+
 	courseIDParam := c.Param("id")
 	courseID, err := strconv.ParseUint(courseIDParam, 10, 32)
 	if err != nil {
@@ -62,7 +68,8 @@ func (h *LessonHandler) CreateLesson(c *gin.Context) {
 	}
 
 	if err := h.db.Create(&lesson).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create lesson"})
+		log.Printf("Create lesson error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create lesson"})
 		return
 	}
 

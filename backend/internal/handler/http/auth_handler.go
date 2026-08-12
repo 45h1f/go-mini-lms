@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 
 	"mini-lms/internal/domain"
@@ -32,6 +33,11 @@ type LoginRequest struct {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database connection unavailable. Please check backend DB."})
+		return
+	}
+
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -45,7 +51,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		log.Printf("Password hashing error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
@@ -57,13 +64,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Email already registered or database error"})
+		log.Printf("User creation error: %v", err)
+		c.JSON(http.StatusConflict, gin.H{"error": "Email already registered or invalid input"})
 		return
 	}
 
 	token, err := middleware.GenerateToken(&user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		log.Printf("Token generation error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to generate session token"})
 		return
 	}
 
@@ -75,6 +84,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
+	if h.db == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database connection unavailable. Please check backend DB."})
+		return
+	}
+
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -94,7 +108,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	token, err := middleware.GenerateToken(&user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		log.Printf("Token generation error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to generate session token"})
 		return
 	}
 
