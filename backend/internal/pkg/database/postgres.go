@@ -7,6 +7,7 @@ import (
 
 	"mini-lms/internal/domain"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -40,8 +41,36 @@ func InitDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to auto-migrate database schema: %w", err)
 	}
 
-	log.Println("Database auto-migration finished.")
+	// Seed default Admin user if not exists
+	seedAdminUser(db)
+
+	log.Println("Database auto-migration & seeding finished.")
 	return db, nil
+}
+
+func seedAdminUser(db *gorm.DB) {
+	var count int64
+	db.Model(&domain.User{}).Where("email = ?", "admin@lms.com").Count(&count)
+	if count == 0 {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("Failed to hash admin password: %v", err)
+			return
+		}
+
+		admin := domain.User{
+			FullName: "System Administrator",
+			Email:    "admin@lms.com",
+			Password: string(hashedPassword),
+			Role:     domain.RoleAdmin,
+		}
+
+		if err := db.Create(&admin).Error; err != nil {
+			log.Printf("Failed to seed admin user: %v", err)
+		} else {
+			log.Println("Default Admin user seeded successfully (admin@lms.com / admin123)")
+		}
+	}
 }
 
 func getEnv(key, fallback string) string {
