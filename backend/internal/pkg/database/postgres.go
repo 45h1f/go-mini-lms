@@ -4,30 +4,35 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"mini-lms/internal/domain"
 
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func InitDB() (*gorm.DB, error) {
-	host := getEnv("DB_HOST", "localhost")
-	port := getEnv("DB_PORT", "5432")
-	user := getEnv("DB_USER", "lms_user")
-	password := getEnv("DB_PASSWORD", "lms_password")
-	dbname := getEnv("DB_NAME", "mini_lms_db")
+	dbPath := getEnv("DB_PATH", "mini_lms.db")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		host, user, password, dbname, port)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	// Ensure directory exists if dbPath includes a folder
+	dir := filepath.Dir(dbPath)
+	if dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create database directory: %w", err)
+		}
 	}
 
-	log.Println("Database connection established successfully.")
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to SQLite database: %w", err)
+	}
+
+	log.Printf("SQLite database connected successfully at: %s", dbPath)
+
+	// Enable Foreign Key support for SQLite
+	db.Exec("PRAGMA foreign_keys = ON;")
 
 	// Auto-migrate domain entities
 	err = db.AutoMigrate(
@@ -44,7 +49,7 @@ func InitDB() (*gorm.DB, error) {
 	// Seed default Admin user if not exists
 	seedAdminUser(db)
 
-	log.Println("Database auto-migration & seeding finished.")
+	log.Println("SQLite database auto-migration & seeding finished.")
 	return db, nil
 }
 
@@ -52,7 +57,7 @@ func seedAdminUser(db *gorm.DB) {
 	var count int64
 	db.Model(&domain.User{}).Where("email = ?", "admin@lms.com").Count(&count)
 	if count == 0 {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 		if err != nil {
 			log.Printf("Failed to hash admin password: %v", err)
 			return
