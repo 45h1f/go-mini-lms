@@ -41,7 +41,10 @@ export default function AuthPage() {
         localStorage.setItem('lms_user', JSON.stringify(data.user));
       }
 
-      setMessage(isLogin ? 'Login successful!' : 'Registration successful!');
+      setMessage(isLogin ? 'Login successful! Redirecting...' : 'Registration successful! Redirecting...');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 800);
     } catch (err: any) {
       setError(err.message);
     }
