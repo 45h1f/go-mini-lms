@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
+async function safeFetchJson(url: string, options?: RequestInit) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+  if (!res.ok) {
+    throw new Error(data.error || `Server responded with status ${res.status}`);
+  }
+  return data;
+}
+
 interface Lesson {
   id: number;
   title: string;
@@ -31,9 +41,7 @@ export default function CoursesPage() {
 
   const fetchCourses = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/courses`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch courses');
+      const data = await safeFetchJson(`${API_BASE_URL}/courses`);
       setCourses(data.courses || []);
     } catch (err: any) {
       setError(err.message);
@@ -47,11 +55,10 @@ export default function CoursesPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/my-enrollments`, {
+      const data = await safeFetchJson(`${API_BASE_URL}/my-enrollments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (res.ok && data.enrollments) {
+      if (data.enrollments) {
         const ids = data.enrollments.map((e: any) => e.course_id);
         setEnrolledCourseIds(ids);
       }
@@ -69,16 +76,13 @@ export default function CoursesPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/enroll`, {
+      await safeFetchJson(`${API_BASE_URL}/courses/${courseId}/enroll`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Enrollment failed');
 
       alert('Enrolled successfully!');
       setEnrolledCourseIds([...enrolledCourseIds, courseId]);

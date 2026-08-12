@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
+async function safeFetchJson(url: string, options?: RequestInit) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+  if (!res.ok) {
+    throw new Error(data.error || `Server responded with status ${res.status}`);
+  }
+  return data;
+}
+
 interface Enrollment {
   id: number;
   course_id: number;
@@ -39,11 +49,9 @@ export default function DashboardPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/my-enrollments`, {
+      const data = await safeFetchJson(`${API_BASE_URL}/my-enrollments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch enrollments');
       setEnrollments(data.enrollments || []);
     } catch (err: any) {
       setError(err.message);
