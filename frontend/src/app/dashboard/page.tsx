@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
@@ -60,29 +61,44 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem('lms_token');
+    localStorage.removeItem('lms_user');
+    window.location.href = '/auth';
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 p-8 font-sans">
       <header className="max-w-6xl mx-auto flex justify-between items-center pb-8 border-b border-slate-800">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Welcome back, <span className="text-indigo-400 font-semibold">{user?.full_name || 'Student'}</span>!
+            {user ? (
+              <>Welcome back, <span className="text-indigo-400 font-semibold">{user.full_name}</span>!</>
+            ) : (
+              <>Access your courses and learning progress</>
+            )}
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <a href="/courses" className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition">
+          <Link href="/courses" className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition">
             Explore Courses
-          </a>
-          <button
-            onClick={() => {
-              localStorage.removeItem('lms_token');
-              localStorage.removeItem('lms_user');
-              window.location.href = '/auth';
-            }}
-            className="border border-slate-700 hover:border-slate-500 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold transition"
-          >
-            Sign Out
-          </button>
+          </Link>
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="border border-slate-700 hover:border-slate-500 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold transition"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              href="/auth"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </header>
 
@@ -91,14 +107,25 @@ export default function DashboardPage() {
           <h2 className="text-xl font-bold mb-4">My Enrolled Courses</h2>
 
           {loading && <div className="text-center text-slate-400 py-12">Loading your enrolled courses...</div>}
-          {error && <div className="bg-rose-950/60 border border-rose-800 text-rose-300 text-sm p-4 rounded-lg text-center">{error}</div>}
+          
+          {error && (
+            <div className="bg-rose-950/60 border border-rose-800 text-rose-300 p-6 rounded-xl text-center space-y-4 max-w-lg mx-auto">
+              <p className="text-sm font-medium">{error}</p>
+              <Link
+                href="/auth"
+                className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-semibold transition"
+              >
+                Sign In Now
+              </Link>
+            </div>
+          )}
 
           {!loading && enrollments.length === 0 && !error && (
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-4">
               <p className="text-slate-400 text-sm">You have not enrolled in any courses yet.</p>
-              <a href="/courses" className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-semibold transition">
+              <Link href="/courses" className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-semibold transition">
                 Browse Course Catalog
-              </a>
+              </Link>
             </div>
           )}
 
@@ -114,12 +141,12 @@ export default function DashboardPage() {
                 </div>
                 <div className="pt-4 border-t border-slate-800/60 flex items-center justify-between">
                   <span className="text-xs text-slate-500">Instructor: {item.course?.instructor?.full_name || 'LMS Faculty'}</span>
-                  <a
+                  <Link
                     href={`/courses/${item.course_id}`}
                     className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium transition"
                   >
                     Continue Learning
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
