@@ -1,22 +1,22 @@
-import React from 'react';
+import Link from 'next/link';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col justify-between p-8 font-sans">
       {/* Header / Navbar */}
       <header className="flex justify-between items-center max-w-6xl mx-auto w-full py-4 border-b border-slate-800">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-lg">
+        <Link href="/" className="flex items-center space-x-2">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-lg text-white">
             L
           </div>
-          <span className="text-xl font-bold tracking-tight">Mini LMS Enterprise</span>
-        </div>
+          <span className="text-xl font-bold tracking-tight text-white">Mini LMS Enterprise</span>
+        </Link>
         <nav className="flex items-center space-x-6 text-sm font-medium text-slate-300">
-          <a href="#courses" className="hover:text-white transition">Courses</a>
-          <a href="#features" className="hover:text-white transition">Architecture</a>
-          <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold text-xs tracking-wider uppercase transition">
+          <Link href="/courses" className="hover:text-white transition">Courses</Link>
+          <Link href="/dashboard" className="hover:text-white transition">Dashboard</Link>
+          <Link href="/auth" className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold text-xs tracking-wider uppercase transition">
             Sign In
-          </button>
+          </Link>
         </nav>
       </header>
 
@@ -32,12 +32,12 @@ export default function Home() {
           High-performance RESTful API powered by Go (Gin + GORM + PostgreSQL) coupled with a modern dynamic Next.js App Router frontend.
         </p>
         <div className="flex justify-center space-x-4 pt-4">
-          <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg shadow-indigo-600/30">
+          <Link href="/courses" className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg shadow-indigo-600/30">
             Browse Courses
-          </button>
-          <button className="border border-slate-700 hover:border-slate-500 text-slate-300 px-6 py-3 rounded-lg font-semibold transition">
-            API Documentation
-          </button>
+          </Link>
+          <Link href="/auth" className="border border-slate-700 hover:border-slate-500 text-slate-300 px-6 py-3 rounded-lg font-semibold transition">
+            Sign In / Register
+          </Link>
         </div>
       </main>
 
