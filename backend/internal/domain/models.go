@@ -57,3 +57,12 @@ type Enrollment struct {
 	Course     Course    `gorm:"foreignKey:CourseID" json:"course,omitempty"`
 	EnrolledAt time.Time `json:"enrolled_at"`
 }
+
+type LessonProgress struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	UserID      uint      `gorm:"uniqueIndex:idx_user_lesson;not null" json:"user_id"`
+	LessonID    uint      `gorm:"uniqueIndex:idx_user_lesson;not null" json:"lesson_id"`
+	IsCompleted bool      `gorm:"default:false" json:"is_completed"`
+	CompletedAt time.Time `json:"completed_at,omitempty"`
+}
+

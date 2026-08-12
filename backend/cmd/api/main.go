@@ -41,6 +41,7 @@ func main() {
 	courseHandler := handler.NewCourseHandler(db)
 	lessonHandler := handler.NewLessonHandler(db)
 	enrollmentHandler := handler.NewEnrollmentHandler(db)
+	progressHandler := handler.NewProgressHandler(db)
 
 	v1 := r.Group("/api/v1")
 	{
@@ -58,9 +59,11 @@ func main() {
 		protected := v1.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 		{
-			// Student Course Enrollment
+			// Student Enrollment & Progress Tracking
 			protected.POST("/courses/:id/enroll", enrollmentHandler.EnrollCourse)
 			protected.GET("/my-enrollments", enrollmentHandler.GetMyEnrollments)
+			protected.POST("/progress", progressHandler.MarkLessonProgress)
+			protected.GET("/courses/:id/progress", progressHandler.GetCourseProgress)
 
 			// Instructor/Admin Lessons & Courses
 			protected.POST("/courses", middleware.RequireRole(domain.RoleInstructor, domain.RoleAdmin), courseHandler.CreateCourse)

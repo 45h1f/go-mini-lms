@@ -34,6 +34,7 @@ func InitDB() (*gorm.DB, error) {
 		&domain.Course{},
 		&domain.Lesson{},
 		&domain.Enrollment{},
+		&domain.LessonProgress{},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate database schema: %w", err)
