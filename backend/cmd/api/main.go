@@ -27,7 +27,7 @@ func main() {
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(24)
+			c.AbortWithStatus(204)
 			return
 		}
 		c.Next()

@@ -30,9 +30,10 @@ export default function AuthPage() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
       if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
+        throw new Error(data.error || `Request failed with status ${res.status}`);
       }
 
       if (data.token) {
